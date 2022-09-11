@@ -82,22 +82,6 @@ info:
   title: GO User API
   version: "1.0"
 paths:
-  /api/healthcheck:
-    get:
-      consumes:
-      - '*/*'
-      description: get the status of server.
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-      summary: Show the status of server.
-      tags:
-      - Healthcheck
   /api/login:
     post:
       consumes:
@@ -203,6 +187,22 @@ paths:
       summary: Get User.
       tags:
       - Users
+  /healthcheck:
+    get:
+      consumes:
+      - '*/*'
+      description: get the status of server.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Show the status of server.
+      tags:
+      - Healthcheck
 schemes:
 - http
 securityDefinitions:
