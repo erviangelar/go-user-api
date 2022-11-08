@@ -2,8 +2,6 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/erviangelar/go-user-api/common/helper"
 	"github.com/erviangelar/go-user-api/models"
@@ -37,10 +35,10 @@ func (h Handler) GetUsers(c *gin.Context) {
 	pagination := helper.Pagination(c)
 	offset := (pagination.Page - 1) * pagination.Limit
 	roleUser := ""
-	if strings.ToLower(role) == "user" {
-		roleUser = `AND role ='user' AND id=` + strconv.Itoa(user_id)
+	if contains(role, "user") {
+		roleUser = `AND role ='user' AND id=` + user_id.String()
 	}
-	var users []UserResponse
+	var users []models.UserResponse
 	qSelectList, qCountList := generateQuery(roleUser)
 	if err := h.DB.Raw(qSelectList, pagination.Limit, offset).Scan(&users).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": err.Error()})
@@ -58,7 +56,6 @@ func (h Handler) GetUsers(c *gin.Context) {
 }
 
 func generateQuery(roleUser string) (string, string) {
-
 	qSelectList := `SELECT "id","name","username", "role","created_at" 
 	FROM users WHERE deleted_at is null ` + roleUser + ` 
 	LIMIT $1

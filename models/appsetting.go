@@ -1,8 +1,10 @@
 package models
 
+import "github.com/gofrs/uuid"
+
 type ApplicationState struct {
-	Role        string
-	UserID      int
+	Role        []string
+	UserID      uuid.UUID
 	RequestPath string
 }
 

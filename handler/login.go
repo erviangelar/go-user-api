@@ -34,7 +34,7 @@ func (h Handler) Login(c *gin.Context) {
 	}
 
 	var userRespon models.AuthResponse
-	userRespon.ID = user.ID
+	userRespon.ID = user.UID
 	userRespon.Name = user.Name
 	userRespon.Role = user.Role
 	userRespon.Username = user.Username

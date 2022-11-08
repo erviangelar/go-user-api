@@ -40,7 +40,7 @@ func (h Handler) RefreshToken(c *gin.Context) {
 		c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
-	userRespon := models.AuthResponse{ID: user.ID, Username: user.Username, Name: user.Name, Role: user.Role}
+	userRespon := models.AuthResponse{ID: user.UID, Username: user.Username, Name: user.Name, Role: user.Role}
 	c.JSON(http.StatusOK, gin.H{"data": &userRespon, "token": accessToken, "refresh-token": refreshToken})
 }
 

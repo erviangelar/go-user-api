@@ -2,7 +2,7 @@ package repositories
 
 import (
 	"github.com/erviangelar/go-user-api/models"
-	uuid "github.com/jackc/pgtype/ext/gofrs-uuid"
+	"github.com/gofrs/uuid"
 	"gorm.io/gorm"
 )
 

@@ -10,13 +10,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-type RoleEnum string
-
-const (
-	RoleAdmin RoleEnum = "admin"
-	RoleUser  RoleEnum = "user"
-)
-
 // Register godoc
 // @Summary Register.
 // @Description Register.
@@ -26,7 +19,7 @@ const (
 // @Param request body models.RegisterRequest true "Body"
 // @Success 200 {object} models.RegisterResponse
 // @Router /api/register [post]
-func (h Handler) Register(c *gin.Context) {
+func (h Handler) AddRole(c *gin.Context) {
 	body := models.RegisterRequest{}
 	if err := c.ShouldBindJSON(&body); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
@@ -67,7 +60,7 @@ func (h Handler) Register(c *gin.Context) {
 	// 	c.Abort()
 	// 	return
 	// }
-	user, err := h.Create(&body)
+	user, err := h.CreateRole(&body)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		c.Abort()
@@ -81,7 +74,7 @@ func (h Handler) Register(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"data": &userRespon})
 }
 
-func (h Handler) Create(data *models.RegisterRequest) (*models.User, error) {
+func (h Handler) CreateRole(data *models.RegisterRequest) (*models.User, error) {
 	validate := validator.New()
 	err := validate.Struct(data)
 	if err != nil {

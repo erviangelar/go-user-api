@@ -3,12 +3,12 @@ package middleware
 import (
 	"context"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"github.com/erviangelar/go-user-api/common/jwt"
 	"github.com/erviangelar/go-user-api/models"
 	"github.com/gin-gonic/gin"
+	"github.com/gofrs/uuid"
 )
 
 func AccessToken() gin.HandlerFunc {
@@ -27,7 +27,7 @@ func AccessToken() gin.HandlerFunc {
 		}
 		appState := models.ApplicationState{
 			Role:        user.Role,
-			UserID:      int(user.ID),
+			UserID:      user.UID,
 			RequestPath: ctx.Request.Method,
 		}
 		ctx.Request = ctx.Request.WithContext(context.WithValue(ctx.Request.Context(), models.AppState{}, appState))
@@ -49,10 +49,9 @@ func RefreshToken() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		IDInt, _ := strconv.Atoi(ID)
 		appState := models.ApplicationState{
-			Role:        "",
-			UserID:      IDInt,
+			Role:        []string{""},
+			UserID:      uuid.FromStringOrNil(ID),
 			RequestPath: ctx.Request.Method,
 		}
 		ctx.Request = ctx.Request.WithContext(context.WithValue(ctx.Request.Context(), models.AppState{}, appState))
@@ -76,10 +75,10 @@ func AdminValidate() gin.HandlerFunc {
 		}
 		appState := models.ApplicationState{
 			Role:        user.Role,
-			UserID:      int(user.ID),
+			UserID:      user.UID,
 			RequestPath: ctx.Request.Method,
 		}
-		if strings.ToLower(user.Role) != "admin" {
+		if contains(user.Role, "admin") {
 			ctx.JSON(http.StatusUnauthorized, gin.H{"message": "your role don't have an access"})
 			ctx.Abort()
 			return
@@ -87,4 +86,14 @@ func AdminValidate() gin.HandlerFunc {
 		ctx.Request = ctx.Request.WithContext(context.WithValue(ctx.Request.Context(), models.AppState{}, appState))
 		ctx.Next()
 	}
+}
+
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if strings.ToLower(v) == str {
+			return true
+		}
+	}
+
+	return false
 }

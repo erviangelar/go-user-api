@@ -3,11 +3,12 @@ package jwt
 import (
 	"errors"
 	"os"
-	"strconv"
+	"strings"
 	"time"
 
 	"github.com/erviangelar/go-user-api/common/config"
 	"github.com/erviangelar/go-user-api/models"
+	"github.com/gofrs/uuid"
 	"github.com/golang-jwt/jwt"
 )
 
@@ -19,6 +20,7 @@ type JWTClaim struct {
 	KeyType  string
 	jwt.StandardClaims
 }
+
 type JWTRefreshClaim struct {
 	ID      string `json:"id"`
 	KeyType string
@@ -29,14 +31,14 @@ type JWTRefreshClaim struct {
 func GenerateAccessToken(user *models.User) (string, error) {
 
 	configs := config.LoadConfig()
-	userID := strconv.Itoa((int)(user.ID))
+	userID := user.UID.String()
 	tokenType := "access"
 
 	claims := JWTClaim{
 		userID,
 		user.Username,
 		user.Name,
-		user.Role,
+		strings.Join(user.Role, ","),
 		tokenType,
 		jwt.StandardClaims{
 			ExpiresAt: time.Now().Add(time.Minute * time.Duration(configs.JwtExpiration)).Unix(),
@@ -62,7 +64,7 @@ func GenerateAccessToken(user *models.User) (string, error) {
 // generate refresh token
 func GenerateRefreshToken(user *models.User) (string, error) {
 	configs := config.LoadConfig()
-	userID := strconv.Itoa((int)(user.ID))
+	userID := user.UID.String()
 	tokenType := "refresh"
 
 	claims := JWTRefreshClaim{
@@ -89,7 +91,7 @@ func GenerateRefreshToken(user *models.User) (string, error) {
 }
 
 // validate access token
-func ValidateAccessToken(tokenString string) (models.User, error) {
+func ValidateAccessToken(tokenString string) (*models.User, error) {
 	configs := config.LoadConfig()
 	token, err := jwt.ParseWithClaims(tokenString, &JWTClaim{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
@@ -108,20 +110,19 @@ func ValidateAccessToken(tokenString string) (models.User, error) {
 		return verifyKey, nil
 	})
 
-	user := models.User{}
 	if err != nil {
-		return user, err
+		return nil, err
 	}
 
 	claims, ok := token.Claims.(*JWTClaim)
 	if !ok || !token.Valid || claims.ID == "" || claims.KeyType != "access" {
-		return user, errors.New("invalid token: authentication failed")
+		return nil, errors.New("invalid token: authentication failed")
 	}
-	ID, _ := strconv.Atoi(claims.ID)
-	user.ID = (uint)(ID)
-	user.Role = claims.Role
+	user := models.User{}
+	user.UID = uuid.FromStringOrNil(claims.ID)
+	user.Role = strings.Split(claims.Role, ";")
 	user.Name = claims.Name
-	return user, nil
+	return &user, nil
 }
 
 // validate refresh token

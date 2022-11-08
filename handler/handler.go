@@ -1,8 +1,11 @@
 package handler
 
 import (
-	"time"
+	"strings"
 
+	utilCache "github.com/erviangelar/go-user-api/common/cache"
+	"github.com/erviangelar/go-user-api/common/config"
+	"github.com/erviangelar/go-user-api/common/db"
 	"github.com/erviangelar/go-user-api/middleware"
 	"github.com/erviangelar/go-user-api/repositories"
 	"github.com/gin-gonic/gin"
@@ -11,25 +14,21 @@ import (
 
 type Handler struct {
 	DB     *gorm.DB
+	Cache  *utilCache.RedisClient
 	Repo   repositories.UserRepo
 	Router *gin.Engine
+	Config *config.Configurations
 }
 
-type UserResponse struct {
-	ID        uint      `example:"1" format:"int64"`
-	Username  string    `json:"username" example:"admin"`
-	Name      string    `json:"name" example:"Admin"`
-	Role      string    `json:"role" example:"admin"`
-	CreatedAt time.Time `json:"created_at" example:"04/09/2022"`
-}
+func RegisterRoutes(r *gin.Engine, Dbs *db.Dbs, config *config.Configurations) {
 
-func RegisterRoutes(r *gin.Engine, db *gorm.DB) {
-
-	repo := repositories.Init(db)
+	repo := repositories.Init(Dbs.DB)
 	h := &Handler{
-		DB:     db,
+		DB:     Dbs.DB,
+		Cache:  Dbs.Cache,
 		Repo:   repo,
 		Router: r,
+		Config: config,
 	}
 	api := r.Group("/api")
 	{
@@ -41,5 +40,14 @@ func RegisterRoutes(r *gin.Engine, db *gorm.DB) {
 		routes.GET("", h.GetUsers)
 		routes.GET("/:id", h.GetUser)
 	}
+}
 
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if strings.ToLower(v) == str {
+			return true
+		}
+	}
+
+	return false
 }

@@ -3,8 +3,6 @@ package handler
 import (
 	"errors"
 	"net/http"
-	"strconv"
-	"strings"
 
 	"github.com/erviangelar/go-user-api/models"
 	"github.com/gin-gonic/gin"
@@ -26,14 +24,14 @@ func (h Handler) GetUser(c *gin.Context) {
 	role := ctx.Value(models.AppState{}).(models.ApplicationState).Role
 	user_id := ctx.Value(models.AppState{}).(models.ApplicationState).UserID
 
-	if strings.ToLower(role) == "user" {
-		if strconv.Itoa(user_id) != id {
+	if contains(role, "user") {
+		if user_id.String() != id {
 			c.JSON(http.StatusNotFound, gin.H{"message": "you don't have permission acces this data"})
 			c.AbortWithError(http.StatusNotFound, errors.New("you don't have permission acces this data"))
 			return
 		}
 	}
-	var user UserResponse
+	var user models.UserResponse
 	err := h.DB.Raw(qSelect, id).Scan(&user).Error
 
 	if err != nil {
